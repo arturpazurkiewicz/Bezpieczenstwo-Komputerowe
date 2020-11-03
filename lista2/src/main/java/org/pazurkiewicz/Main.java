@@ -35,7 +35,7 @@ public class Main {
         try {
             scanner = new Scanner(new FileReader(filename));
         } catch (FileNotFoundException e) {
-            System.out.println("Invalid directory");
+            System.out.println("Invalid directory "+filename);
             System.out.println("Working Directory = " + System.getProperty("user.dir"));
             System.exit(-1);
         }
