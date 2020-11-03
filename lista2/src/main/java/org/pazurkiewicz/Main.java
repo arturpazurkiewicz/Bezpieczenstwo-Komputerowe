@@ -1,5 +1,6 @@
 package org.pazurkiewicz;
 
+import net.sourceforge.argparse4j.impl.Arguments;
 import org.pazurkiewicz.language.Polish;
 
 import net.sourceforge.argparse4j.ArgumentParsers;
@@ -17,9 +18,10 @@ public class Main {
     private static Namespace createArgumentParser(String[] args) {
         ArgumentParser parser = ArgumentParsers.newFor("decrypter-1.0.jar").build()
                 .description("Decrypter of stream ciphers");
-        parser.addArgument("-f", "--file").help("File with cryptograms").type(String.class).required(true);
-        parser.addArgument("-c", "--ciphers").help("Max number of cryptograms")
+        parser.addArgument("-f", "--file").help("Choose file with cryptograms").type(String.class).required(true);
+        parser.addArgument("-c", "--ciphers").help("Type max number of cryptograms")
                 .type(Integer.class).required(false);
+        parser.addArgument("-t").help("Disable fix mode").action(Arguments.storeTrue());
         try {
             return parser.parseArgs(args);
         } catch (ArgumentParserException e) {
@@ -57,7 +59,10 @@ public class Main {
             ciphers = Integer.MAX_VALUE;
         Decryptor decryptor = new Decryptor(new Polish(), getCryptogramsFromFile(cli.get("file"),ciphers));
         Scanner in = new Scanner(System.in);
-
+        if (cli.getBoolean("t")){
+            decryptor.decrypt().forEach(System.out::println);
+            System.exit(0);
+        }
         while (true) {
             try {
                 ArrayList<String> decrypted = decryptor.decrypt();
