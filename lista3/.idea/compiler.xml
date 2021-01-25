@@ -9,5 +9,8 @@
         <module name="decrypter" />
       </profile>
     </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="decrypter" target="14" />
+    </bytecodeTargetLevel>
   </component>
 </project>
